@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LabTrack — Equipment Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #EEF1F0;
+    --panel: #FFFFFF;
+    --ink: #1F2B2E;
+    --ink-soft: rgba(31,43,46,0.58);
+    --line: rgba(31,43,46,0.12);
+    --green: #3B7A57;
+    --green-soft: rgba(59,122,87,0.12);
+    --blue: #3D6B99;
+    --blue-soft: rgba(61,107,153,0.12);
+    --red: #C1483A;
+    --red-soft: rgba(193,72,58,0.12);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 24px 14px 60px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{ width: min(96vw, 720px); }
+
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width: 34px; height:34px;
+    background: var(--ink);
+    border-radius: 8px;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--bg);
+    font-family:'IBM Plex Mono';
+    font-weight:600;
+    font-size: 13px;
+  }
+  h1{
+    font-family:'Archivo', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+  }
+  .tag{ font-size: 12px; color: var(--ink-soft); }
+
+  .stats{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .stat{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 10px;
+    text-align:center;
+  }
+  .stat .n{
+    font-family:'IBM Plex Mono';
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .stat .l{
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-transform:uppercase;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .stat.total .n{ color: var(--ink); }
+  .stat.available .n{ color: var(--green); }
+  .stat.borrowed .n{ color: var(--blue); }
+  .stat.overdue .n{ color: var(--red); }
+
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .panel h2{
+    font-family:'Archivo', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .form-row{
+    display:grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  label{
+    display:block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 5px;
+  }
+  input, select{
+    width:100%;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family:'Inter';
+    font-size: 13px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  input:focus, select:focus{ outline: 2px solid var(--green); outline-offset: 1px; }
+
+  button.primary{
+    background: var(--ink);
+    color: var(--bg);
+    border:none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-family:'Inter';
+    font-weight: 600;
+    font-size: 13px;
+    cursor:pointer;
+  }
+  button.primary:hover{ opacity: 0.88; }
+
+  .filter-row{
+    display:flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .filter-row input{ flex: 1; min-width: 140px; }
+  .chip{
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink-soft);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor:pointer;
+  }
+  .chip.active{
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .item-card{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 12px;
+    padding: 13px 4px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .item-card:last-child{ border-bottom:none; }
+  .item-left{ display:flex; align-items:center; gap: 12px; }
+  .item-code{
+    font-family:'IBM Plex Mono';
+    font-size: 11px;
+    color: var(--ink-soft);
+    background: var(--bg);
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .item-name{ font-weight: 600; font-size: 14px; }
+  .item-meta{ font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .status-badge{
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space:nowrap;
+  }
+  .status-available{ background: var(--green-soft); color: var(--green); }
+  .status-borrowed{ background: var(--blue-soft); color: var(--blue); }
+  .status-overdue{ background: var(--red-soft); color: var(--red); }
+
+  .item-actions{ display:flex; gap: 6px; }
+  button.small{
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    padding: 7px 12px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor:pointer;
+  }
+  button.small.borrow{ border-color: var(--blue); color: var(--blue); }
+  button.small.return{ border-color: var(--green); color: var(--green); }
+  button.small.remove{ border-color: var(--red); color: var(--red); }
+
+  .empty-state{ text-align:center; padding: 30px 0; color: var(--ink-soft); font-size: 13px; }
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background: rgba(31,43,46,0.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .modal{
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 20px;
+    width: min(92vw, 340px);
+  }
+  .modal h2{ font-family:'Archivo'; font-size:16px; margin-bottom: 14px; }
+  .modal-actions{ display:flex; gap: 8px; margin-top: 6px; }
+  .modal-actions button{ flex:1; }
+  button.cancel{
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    padding: 10px;
+    border-radius: 8px;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="brand-mark">LT</div>
+      <div>
+        <h1>LabTrack</h1>
+        <div class="tag">Know what's on the shelf, who has it, and when it's due back.</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat total"><div class="n" id="statTotal">0</div><div class="l">Total Items</div></div>
+    <div class="stat available"><div class="n" id="statAvailable">0</div><div class="l">Available</div></div>
+    <div class="stat borrowed"><div class="n" id="statBorrowed">0</div><div class="l">Borrowed</div></div>
+    <div class="stat overdue"><div class="n" id="statOverdue">0</div><div class="l">Overdue</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Add equipment</h2>
+    <div class="form-row">
+      <div>
+        <label>Item name</label>
+        <input type="text" id="itemName" placeholder="e.g. Digital Multimeter">
+      </div>
+      <div>
+        <label>Category</label>
+        <select id="itemCategory">
+          <option>Electronics</option>
+          <option>Optics</option>
+          <option>Chemistry</option>
+          <option>Mechanical</option>
+          <option>Safety Gear</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label>Quantity</label>
+        <input type="number" id="itemQty" value="1" min="1">
+      </div>
+    </div>
+    <button class="primary" id="addItemBtn">Add to Inventory</button>
+  </div>
+
+  <div class="panel">
+    <h2>Inventory</h2>
+    <div class="filter-row">
+      <input type="text" id="searchInput" placeholder="Search by name or code…">
+    </div>
+    <div class="filter-row">
+      <button class="chip active" data-filter="all">All</button>
+      <button class="chip" data-filter="available">Available</button>
+      <button class="chip" data-filter="borrowed">Borrowed</button>
+      <button class="chip" data-filter="overdue">Overdue</button>
+    </div>
+    <div id="itemList"></div>
+  </div>
+</div>
+
+<!-- Borrow modal -->
+<div class="modal-overlay" id="borrowModal" style="display:none;">
+  <div class="modal">
+    <h2>Borrow item</h2>
+    <label>Borrower name</label>
+    <input type="text" id="borrowerName" placeholder="e.g. Rahul Nair">
+    <label style="margin-top:10px;">Due back on</label>
+    <input type="text" id="dueDate" placeholder="dd/mm/yyyy">
+    <div class="modal-actions">
+      <button class="cancel" id="cancelBorrowBtn">Cancel</button>
+      <button class="primary" id="confirmBorrowBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let items = [];
+  let nextId = 1;
+  let activeFilter = 'all';
+  let borrowTargetId = null;
+
+  function genCode(category){
+    const prefixMap = { Electronics:'ELE', Optics:'OPT', Chemistry:'CHM', Mechanical:'MEC', 'Safety Gear':'SAF', Other:'GEN' };
+    const prefix = prefixMap[category] || 'GEN';
+    const num = String(nextId).padStart(3, '0');
+    return `${prefix}-${num}`;
+  }
+
+  function parseDMY(str){
+    const parts = str.split('/');
+    if(parts.length !== 3) return null;
+    const [d,m,y] = parts.map(Number);
+    if(!d || !m || !y) return null;
+    return new Date(y, m-1, d);
+  }
+
+  function isOverdue(item){
+    if(item.status !== 'borrowed' || !item.dueDate) return false;
+    const due = parseDMY(item.dueDate);
+    if(!due) return false;
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return due < today;
+  }
+
+  function addItem(){
+    const name = document.getElementById('itemName').value.trim();
+    const category = document.getElementById('itemCategory').value;
+    const qty = parseInt(document.getElementById('itemQty').value) || 1;
+    if(!name){ alert('Enter an item name.'); return; }
+
+    for(let i=0;i<qty;i++){
+      items.push({
+        id: nextId,
+        name: qty > 1 ? `${name} #${i+1}` : name,
+        category,
+        code: genCode(category),
+        status: 'available',
+        borrower: null,
+        dueDate: null
+      });
+      nextId++;
+    }
+    document.getElementById('itemName').value = '';
+    document.getElementById('itemQty').value = '1';
+    render();
+  }
+
+  function openBorrowModal(id){
+    borrowTargetId = id;
+    document.getElementById('borrowerName').value = '';
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    document.getElementById('dueDate').value = `${dd}/${mm}/${d.getFullYear()}`;
+    document.getElementById('borrowModal').style.display = 'flex';
+  }
+
+  function confirmBorrow(){
+    const name = document.getElementById('borrowerName').value.trim();
+    const due = document.getElementById('dueDate').value.trim();
+    if(!name){ alert('Enter the borrower\'s name.'); return; }
+    if(!parseDMY(due)){ alert('Enter the due date as dd/mm/yyyy.'); return; }
+    const item = items.find(i => i.id === borrowTargetId);
+    item.status = 'borrowed';
+    item.borrower = name;
+    item.dueDate = due;
+    document.getElementById('borrowModal').style.display = 'none';
+    render();
+  }
+
+  function returnItem(id){
+    const item = items.find(i => i.id === id);
+    item.status = 'available';
+    item.borrower = null;
+    item.dueDate = null;
+    render();
+  }
+
+  function removeItem(id){
+    items = items.filter(i => i.id !== id);
+    render();
+  }
+
+  function render(){
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    let list = items.filter(i => {
+      const matchesSearch = i.name.toLowerCase().includes(search) || i.code.toLowerCase().includes(search);
+      if(!matchesSearch) return false;
+      const overdue = isOverdue(i);
+      if(activeFilter === 'available') return i.status === 'available';
+      if(activeFilter === 'borrowed') return i.status === 'borrowed' && !overdue;
+      if(activeFilter === 'overdue') return overdue;
+      return true;
+    });
+
+    const total = items.length;
+    const available = items.filter(i => i.status === 'available').length;
+    const overdueCount = items.filter(isOverdue).length;
+    const borrowed = items.filter(i => i.status === 'borrowed').length - overdueCount;
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statAvailable').textContent = available;
+    document.getElementById('statBorrowed').textContent = borrowed;
+    document.getElementById('statOverdue').textContent = overdueCount;
+
+    const listEl = document.getElementById('itemList');
+    if(list.length === 0){
+      listEl.innerHTML = '<div class="empty-state">No equipment matches — add an item above to get started.</div>';
+      return;
+    }
+
+    listEl.innerHTML = list.map(i => {
+      const overdue = isOverdue(i);
+      const statusClass = overdue ? 'overdue' : i.status;
+      const statusLabel = overdue ? 'Overdue' : (i.status === 'available' ? 'Available' : 'Borrowed');
+      const meta = i.status === 'borrowed'
+        ? `${i.borrower} · due ${i.dueDate}`
+        : i.category;
+      return `
+        <div class="item-card">
+          <div class="item-left">
+            <span class="item-code">${i.code}</span>
+            <div>
+              <div class="item-name">${i.name}</div>
+              <div class="item-meta">${meta}</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="status-badge status-${statusClass}">${statusLabel}</span>
+            <div class="item-actions">
+              ${i.status === 'available'
+                ? `<button class="small borrow" onclick="openBorrowModal(${i.id})">Borrow</button>`
+                : `<button class="small return" onclick="returnItem(${i.id})">Return</button>`
+              }
+              <button class="small remove" onclick="removeItem(${i.id})">✕</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('addItemBtn').addEventListener('click', addItem);
+  document.getElementById('searchInput').addEventListener('input', render);
+  document.getElementById('cancelBorrowBtn').addEventListener('click', () => {
+    document.getElementById('borrowModal').style.display = 'none';
+  });
+  document.getElementById('confirmBorrowBtn').addEventListener('click', confirmBorrow);
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeFilter = chip.dataset.filter;
+      render();
+    });
+  });
+
+  // seed a few sample items so the demo isn't empty
+  ['Digital Multimeter|Electronics','Oscilloscope|Electronics','Compound Microscope|Optics','Bunsen Burner|Chemistry','Safety Goggles|Safety Gear'].forEach(pair => {
+    const [name, category] = pair.split('|');
+    items.push({ id: nextId, name, category, code: genCode(category), status:'available', borrower:null, dueDate:null });
+    nextId++;
+  });
+  render();
+</script>
+</body>
+</html>
